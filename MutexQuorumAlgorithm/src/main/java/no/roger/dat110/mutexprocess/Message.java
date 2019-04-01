@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.rmi.RemoteException;
 
 public class Message implements Serializable {
-	
 
 	private static final long serialVersionUID = 1L;
 	private int clock;
@@ -12,11 +11,11 @@ public class Message implements Serializable {
 	private String processStubName;
 	private OperationType optype;
 	private boolean acknowledged = false;
-	
+
 	private String filename;
 	private String newcontent;
 	private int version;
-	
+
 	public Message() throws RemoteException {
 		super();
 	}
@@ -24,7 +23,7 @@ public class Message implements Serializable {
 	public int getClock() {
 		return clock;
 	}
-	
+
 	public void setClock(int clock) {
 		this.clock = clock;
 	}
@@ -84,5 +83,4 @@ public class Message implements Serializable {
 	public void setNewcontent(String newcontent) {
 		this.newcontent = newcontent;
 	}
-	
 }
