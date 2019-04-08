@@ -1,0 +1,20 @@
+language: java
+install: true
+jdk:
+  - openjdk11
+
+matrix:
+    include:
+        - name: "ChordDHT"
+          script:
+            - cd ChordDHT
+            - ./gradlew build
+            - ./gradlew test  
+
+        - name: "Mutex Quorum Algorithm"
+          script:
+            - cd MutexQuorumAlgorithm
+            - ./gradlew build
+            - ./gradlew test
+
+
