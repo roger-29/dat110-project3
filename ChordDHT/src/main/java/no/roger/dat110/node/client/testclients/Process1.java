@@ -1,4 +1,4 @@
-package no.roger.dat110;
+package no.roger.dat110.node.client.testclients;
 
 import no.roger.dat110.rpc.ChordNodeContainer;
 
