@@ -1,0 +1,39 @@
+{
+	"configurations": [
+		{
+			"type": "java",
+			"name": "CodeLens (Launch) - Process3",
+			"request": "launch",
+			"mainClass": "no.roger.dat110.node.client.testclients.Process3",
+			"projectName": "ChordDHT"
+		},
+		{
+			"type": "java",
+			"name": "CodeLens (Launch) - Process2",
+			"request": "launch",
+			"mainClass": "no.roger.dat110.node.client.testclients.Process2",
+			"projectName": "ChordDHT"
+		},
+		{
+			"type": "java",
+			"name": "CodeLens (Launch) - Process1",
+			"request": "launch",
+			"mainClass": "no.roger.dat110.node.client.testclients.Process1",
+			"projectName": "ChordDHT"
+		},
+		{
+			"type": "java",
+			"name": "CodeLens (Launch) - Process5",
+			"request": "launch",
+			"mainClass": "no.roger.dat110.node.client.testclients.Process5",
+			"projectName": "ChordDHT"
+		},
+		{
+			"type": "java",
+			"name": "CodeLens (Launch) - Process7",
+			"request": "launch",
+			"mainClass": "no.roger.dat110.Process7",
+			"projectName": "ChordDHT"
+		}
+	]
+}
