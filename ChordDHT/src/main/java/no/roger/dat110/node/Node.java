@@ -14,6 +14,7 @@ import java.math.BigInteger;
 //import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.AccessException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -25,15 +26,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.Opt;
+
 import no.roger.dat110.rpc.interfaces.ChordNodeInterface;
 import no.roger.dat110.util.Hash;
 import no.roger.dat110.util.Util;
 
 public class Node extends UnicastRemoteObject implements ChordNodeInterface {
 	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private BigInteger nodeID;		// BigInteger value of hash of IP address of the Node
 	private String nodeIP;			// IP address of node 
@@ -151,7 +151,7 @@ public class Node extends UnicastRemoteObject implements ChordNodeInterface {
 			// check that keyid is a member of the set {nodeid+1,...,succID}
 			Boolean cond = Util.computeLogic(keyid, nodeID.add(new BigInteger("1")), succID);
 	
-			if(cond) {
+			if (cond) {
 				return succstub;
 			} else {
 				// search the local finger table of this node for the highest predecessor of id
@@ -309,90 +309,162 @@ public class Node extends UnicastRemoteObject implements ChordNodeInterface {
 	
 	// multicast message to N/2 + 1 processes (random processes)
 	private boolean multicastMessage(Message message) throws AccessException, RemoteException {
-		
+
 		// the same as MutexProcess - see MutexProcess
+
+		quorum = activenodesforfile.size()/2 + 1;
+		List<Message> activeNodes = new ArrayList<Message>(this.activenodesforfile);
 		
-		return false;
+		synchronized(queueACK) {
+			queueACK.clear();
+			for (Message activeNode : activeNodes) {
+				String stub = activeNode.getNodeID().toString();
+
+				try {
+					Registry reg = Util.locateRegistry(activeNode.getNodeIP());
+					ChordNodeInterface node = (ChordNodeInterface) reg.lookup(stub);
+					queueACK.add(node.onMessageReceived(message));
+				} catch (NotBoundException ex) {
+					ex.printStackTrace();
+				}
+			}
+		}
+
+		return majorityAcknowledged();
 	}
 	
 	@Override
 	public Message onMessageReceived(Message message) throws RemoteException {
 		
 		// increment the local clock
+		incrementclock();
 
 		// Hint: for all the 3 cases, use Message to send GRANT or DENY. e.g. message.setAcknowledgement(true) = GRANT
 		
 		/**
 		 *  case 1: Receiver is not accessing shared resource and does not want to: GRANT, acquirelock and reply
 		 */
-		
+		if (!CS_BUSY) {
+			acquireLock();
+			message.setAcknowledged(true);
+			return message;
+		}
 		
 		/**
 		 *  case 2: Receiver already has access to the resource: DENY and reply
 		 */
-		
+		if (CS_BUSY) {
+			message.setAcknowledged(false);
+			return message;
+		}
 		
 		/**
 		 *  case 3: Receiver wants to access resource but is yet to (compare own multicast message to received message
 		 *  the message with lower timestamp wins) - GRANT if received is lower, acquirelock and reply
-		 */		
+		 */
+		if (WANTS_TO_ENTER_CS) {
+			if (message.getClock() < counter) {
+				acquireLock();
+				message.setAcknowledged(true);
+				return message;
+			} else {
+				message.setAcknowledged(false);
+				return message;
+			}
+		}
 		
-		
-		return null;
-		
+		return message;
 	}
 	
 	@Override
 	public boolean majorityAcknowledged() throws RemoteException {
 		
 		// count the number of yes (i.e. where message.isAcknowledged = true)
+		long count = queueACK.stream().filter(message -> message.isAcknowledged()).count();
+
 		// check if it is the majority or not
 		// return the decision (true or false)
+		quorum = activenodesforfile.size()/2 + 1;
 
-						
-						
-						
-		return false;			// change this to the result of the vote
+		return count >= quorum;
 	}
 
 	@Override
 	public void setActiveNodesForFile(Set<Message> messages) throws RemoteException {
-		
 		activenodesforfile = messages;
-		
 	}
 
 	@Override
 	public void onReceivedVotersDecision(Message message) throws RemoteException {
-		
 		// release CS lock if voter initiator says he was denied access bcos he lacks majority votes
-		// otherwise lock is kept
+		
+		if (message.isAcknowledged()) {
+			WANTS_TO_ENTER_CS = false;
+		}
 
+		// otherwise lock is kept
 	}
 
 	@Override
 	public void onReceivedUpdateOperation(Message message) throws RemoteException {
 		
 		// check the operation type: we expect a WRITE operation to do this. 
+		OperationType opType = message.getOptype();
+
 		// perform operation by using the Operations class 
 		// Release locks after this operation
-		
+
+		switch (opType) {
+			case WRITE: {
+				Operations op = new Operations(this, message, activenodesforfile);
+				op.performOperation();
+				releaseLocks();
+				break;
+			}
+			default: break;
+		}
 	}
 	
 	@Override
 	public void multicastUpdateOrReadReleaseLockOperation(Message message) throws RemoteException {
 		
 		// check the operation type:
+		OperationType opType = message.getOptype();
+
 		// if this is a write operation, multicast the update to the rest of the replicas (voters)
 		// otherwise if this is a READ operation multicast releaselocks to the replicas (voters)
+
+		switch(opType) {
+			case WRITE: {
+				Operations op = new Operations(this, message, activenodesforfile);
+				op.multicastOperationToReplicas(message);
+				break;
+			}
+			case READ: {
+				Operations op = new Operations(this, message, activenodesforfile);
+				op.multicastReadReleaseLocks();
+				break;
+			}
+			default: break;
+		}
 	}	
 	
 	@Override
 	public void multicastVotersDecision(Message message) throws RemoteException {	
 		
 		// multicast voters decision to the rest of the replicas (i.e activenodesforfile)
+		List<Message> activeNodes = new ArrayList<Message>(this.activenodesforfile);
 
+		for (Message activeNode : activeNodes) {
+			String stub = activeNode.getNodeID().toString();
 
+			try {
+				Registry reg = Util.locateRegistry(activeNode.getNodeIP());
+				ChordNodeInterface node = (ChordNodeInterface) reg.lookup(stub);
+				node.onReceivedVotersDecision(message);
+			} catch (NotBoundException ex) {
+				ex.printStackTrace();
+			}
+		}
 	}
-
 }
