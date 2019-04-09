@@ -1,4 +1,4 @@
-package no.roger.dat110;
+package no.roger.dat110.node.client;
 
 /**
  * exercise/demo purpose in dat110
@@ -18,13 +18,14 @@ import no.roger.dat110.rpc.interfaces.ChordNodeInterface;
 import no.roger.dat110.util.Hash;
 import no.roger.dat110.util.Util;
 
-public class NodeClientReader extends Thread {
+public class NodeClientWriter extends Thread {
 
 	private boolean succeed = false;
-	
+	private String content;
 	private String filename;
 	
-	public NodeClientReader(String filename) {
+	public NodeClientWriter(String content, String filename) {
+		this.content = content;
 		this.filename = filename;
 	}
 	
@@ -36,22 +37,34 @@ public class NodeClientReader extends Thread {
 		
 		// Lookup(key) - Use this class as a client that is requesting for a new file and needs the identifier and IP of the node where the file is located
 		// assume you have a list of nodes in the tracker class and select one randomly. We can use the Tracker class for this purpose
-
 		
 		// connect to an active chord node - can use the process defined in StaticTracker 
 		
 		// Compute the hash of the node's IP address
-		
+		Registry registry = Util.tryIPs();
+
 		// use the hash to retrieve the ChordNodeInterface remote object from the registry
-		
+		String hashedIP = Hash.hashOf(Util.activeIP).toString();
+
+		try {
+			ChordNodeInterface entryNode = (ChordNodeInterface) registry.lookup(hashedIP);
+			FileManager fm = new FileManager(entryNode, StaticTracker.N);
+			this.succeed = fm.requestWriteToFileFromAnyActiveNode(filename, content);
+		} catch (RemoteException | NotBoundException ex) {
+			ex.printStackTrace();
+		}
+
 		// do: FileManager fm = new FileManager(ChordNodeInterface, StaticTracker.N);
 		
-		// do: boolean succeed = fm.requestToReadFileFromAnyActiveNode(filename);
-	
+		// do: boolean succeed = fm.requestWriteToFileFromAnyActiveNode(filename, content);	
 	}
 	
 	public boolean isSucceed() {
 		return succeed;
+	}
+
+	public void setSucceed(boolean succeed) {
+		this.succeed = succeed;
 	}
 
 }
