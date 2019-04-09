@@ -4,6 +4,12 @@
 
 [Task Overview](https://github.com/selabhvl/dat110public/blob/master/week12/week12.md)
 
+This hand-in was done by:
+
+- [Arne Olai Molland](https://github.com/arnemolland)
+- [Anders Graneng](https://github.com/andersfgraneng)
+- [Sondre Gjellestad](https://github.com/sondregj)
+
 ## Usage
 
 The project is built using Gradle.
