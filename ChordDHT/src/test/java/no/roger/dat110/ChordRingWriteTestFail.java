@@ -1,14 +1,21 @@
 package no.roger.dat110;
 
-
 import java.math.BigInteger;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+import no.roger.dat110.node.client.NodeClientWriter;
+
+/*
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+*/
 
 import no.roger.dat110.rpc.ChordNodeContainer;
 import no.roger.dat110.rpc.StaticTracker;
@@ -28,7 +35,7 @@ class ChordRingWriteTestFail {
 	private ChordNodeInterface p9;
 	private ChordNodeInterface p10;
 
-	@BeforeEach
+	@Before
 	void setUp() throws Exception {
 		
 		String node1 = "process1";
@@ -70,7 +77,7 @@ class ChordRingWriteTestFail {
 	}
 
 	@Test
-	void test() throws RemoteException, InterruptedException {
+	public void test() throws RemoteException, InterruptedException {
 		// test quorum-based consistency protocol
 		// acquire read/write locks for 9 processes (N=10) we need N/2 + 1 to get permission
 		// Here we don't know the number of replicas for a particular file. The minimum is 1
@@ -85,7 +92,9 @@ class ChordRingWriteTestFail {
 		p8.acquireLock();
 		p9.acquireLock();
 		
-		NodeClientWriter w = new NodeClientWriter("12345test", "process4");	// request to write 12345test into the file named process4
+		// request to write 12345test into the file named process4
+		NodeClientWriter w = new NodeClientWriter("12345test", "process4");	
+		
 		w.start();
 		w.join();
 		
@@ -98,8 +107,9 @@ class ChordRingWriteTestFail {
 		p7.releaseLocks();
 		p8.releaseLocks();
 		p6.releaseLocks();
-		Assertions.assertTrue(w.isSucceed()); 									// test must fail as this should return false (should not get the majority vote)
 		
+		assertFalse(w.isSucceed());
+		
+		// test must fail as this should return false (should not get the majority vote)	
 	}
-
 }

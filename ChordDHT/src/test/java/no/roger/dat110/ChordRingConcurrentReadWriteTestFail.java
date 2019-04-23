@@ -6,9 +6,18 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+import no.roger.dat110.node.client.NodeClientReader;
+import no.roger.dat110.node.client.NodeClientWriter;
+
+/*
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+*/
 
 import no.roger.dat110.rpc.ChordNodeContainer;
 import no.roger.dat110.rpc.StaticTracker;
@@ -28,7 +37,7 @@ class ChordRingConcurrentReadWriteTestFail {
 	private ChordNodeInterface p9;
 	private ChordNodeInterface p10;
 
-	@BeforeEach
+	@Before
 	void setUp() throws Exception {
 		
 		String node1 = "process1";
@@ -70,7 +79,7 @@ class ChordRingConcurrentReadWriteTestFail {
 	}
 
 	@Test
-	void test() throws RemoteException, InterruptedException {
+	public void test() throws RemoteException, InterruptedException {
 		// test quorum-based consistency protocol
 		// concurrency test when 2 clients request to read and write to the same file at the same time
 		// Here we are testing for concurrency access on the same file. Testing on different files may pass because
@@ -87,8 +96,7 @@ class ChordRingConcurrentReadWriteTestFail {
 		
 		boolean result = r.isSucceed() && w.isSucceed();
 		
-		Assertions.assertTrue(result); 										// test must fail as this should return false
-
+		assertFalse(result);
+		// test must fail as this should return false
 	}
-
 }
