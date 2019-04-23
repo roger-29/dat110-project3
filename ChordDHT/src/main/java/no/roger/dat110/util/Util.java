@@ -88,7 +88,6 @@ public class Util {
 		}
 		
 		return registry;
-
 	}
 	
 	public static ChordNodeInterface registryHandle(ChordNodeInterface node) {
@@ -101,12 +100,12 @@ public class Util {
 		try {
 			registry = locateRegistry(node.getNodeIP());		
 			
-			if(registry == null) {
+			if (registry == null) {
 				return null;
 			}
 			
 			nodestub = (ChordNodeInterface) registry.lookup(node.getNodeID().toString());	// remote stub
-		} catch (NotBoundException | RemoteException e) {
+		} catch (NotBoundException | RemoteException ex) {
 			return null;			// if this call fails, then treat the node to have left the ring...or unavailable
 		}
 		
@@ -119,12 +118,9 @@ public class Util {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(file, false)); // don't append - 
 			bw.write(content);
 			bw.newLine();
-			bw.close();
-									
-		} catch (IOException e) {
-			
-			e.printStackTrace();
+			bw.close();		
+		} catch (IOException ex) {
+			ex.printStackTrace();
 		}
 	}
-
 }

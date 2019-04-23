@@ -70,8 +70,10 @@ public class TestConcurrentReadWriteConsistencyPass {
 
 		System.out.println(pr1.isSucceeded() + " : " + pr2.isSucceeded());
 		boolean result = pr1.isSucceeded() && pr2.isSucceeded();
-		assertFalse(result); // This must assert to false (pass) i.e. pr1 and pr2 = false (at least one must
-							 // fail to avoid read/write conflicts)
+		assertFalse(result); 
+		
+		// This must assert to false (pass) i.e. pr1 and pr2 = false (at least one must
+		// fail to avoid read/write conflicts)
 	}
 
 	private Message buildWriteMessage(String procname) throws RemoteException {

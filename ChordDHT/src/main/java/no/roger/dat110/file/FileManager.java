@@ -220,8 +220,8 @@ public class FileManager extends Thread {
 
 		// set the NodeIP in the message (replace ip with )
 		nodeMessage.setNodeIP(node.getNodeIP());
- 		nodeMessage.setNewcontent(newcontent);
- 		nodeMessage.setOptype(OperationType.WRITE);
+		nodeMessage.setNewcontent(newcontent);
+		nodeMessage.setOptype(OperationType.WRITE);
 
 		// send a request to a node and get the voters decision
 		// put the decision back in the message
@@ -233,9 +233,9 @@ public class FileManager extends Thread {
 		// if majority votes
 		if (request) {
 			node.acquireLock();
- 			Operations op = new Operations(node, nodeMessage, activeNodeMessages);
+			Operations op = new Operations(node, nodeMessage, activeNodeMessages);
 			op.performOperation();
-			
+
 			node.multicastUpdateOrReadReleaseLockOperation(nodeMessage);
 
 			try {
@@ -246,7 +246,6 @@ public class FileManager extends Thread {
 
 			node.releaseLocks();
 		}
-
 
 		// acquire lock to CS and also increments localclock
 
